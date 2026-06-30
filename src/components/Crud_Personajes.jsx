@@ -49,6 +49,16 @@ const formatearNombre = (nombre) => {
   return limpio.charAt(0).toUpperCase() + limpio.slice(1);
 };
 
+const normalizarNombreApi = (nombre) =>
+  limpiarTexto(nombre)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/♀/g, "-f")
+    .replace(/♂/g, "-m")
+    .replace(/['.]/g, "")
+    .replace(/[\s_]+/g, "-");
+
 const esUrlSegura = (url) => {
   const valor = limpiarTexto(url);
 
@@ -246,8 +256,8 @@ export default function CrudPokemon() {
     const limpio = sanitizarPokemon(datos);
 
     if (!limpio.nombre) return "El nombre es obligatorio.";
-    if (!/^[a-zA-Z0-9-]{1,40}$/.test(limpio.nombre)) {
-      return "El nombre solo puede contener letras, numeros y guiones.";
+    if (normalizarNombreApi(limpio.nombre).length > 60) {
+      return "El nombre es demasiado largo.";
     }
     if (!CATEGORIAS_VALIDAS.includes(limpio.categoria)) {
       return "Seleccione una categoria valida.";
@@ -296,7 +306,7 @@ export default function CrudPokemon() {
   const getDescripcion = async (nombre) => {
     try {
       const data = await fetchJson(
-        `https://pokeapi.co/api/v2/pokemon-species/${nombre}`,
+        `https://pokeapi.co/api/v2/pokemon-species/${encodeURIComponent(nombre)}`,
         "No se pudo obtener la descripcion del Pokemon."
       );
 
@@ -319,7 +329,7 @@ export default function CrudPokemon() {
 
     try {
       const data = await fetchJson(
-        `https://pokeapi.co/api/v2/move/${moveName}`,
+        `https://pokeapi.co/api/v2/move/${encodeURIComponent(moveName)}`,
         "No se pudo traducir un ataque."
       );
 
@@ -344,15 +354,32 @@ export default function CrudPokemon() {
   };
 
   const obtenerMovimientosCompetitivos = async (data, tiposPokemon) => {
-    const movimientos = await Promise.all(
-      data.moves.map(async (m) => {
-        const moveData = await fetchJson(
-          m.move.url,
-          "No se pudo obtener un movimiento del Pokemon."
-        );
+    const movimientosBase = data.moves
+      .map((m) => ({
+        name: limpiarTexto(m.move?.name),
+        url: limpiarTexto(m.move?.url)
+      }))
+      .filter((m) => m.name);
+
+    if (movimientosBase.length === 0) {
+      return ["Sin ataques registrados"];
+    }
+
+    const resultados = await Promise.allSettled(
+      movimientosBase.map(async (m) => {
+        if (!m.url) {
+          return {
+            name: m.name,
+            power: 0,
+            accuracy: 80,
+            type: null
+          };
+        }
+
+        const moveData = await fetchJson(m.url, "No se pudo obtener un movimiento del Pokemon.");
 
         return {
-          name: m.move.name,
+          name: m.name,
           power: moveData.power,
           accuracy: moveData.accuracy,
           type: moveData.type
@@ -360,16 +387,29 @@ export default function CrudPokemon() {
       })
     );
 
+    const movimientos = resultados.map((resultado, index) =>
+      resultado.status === "fulfilled"
+        ? resultado.value
+        : {
+            name: movimientosBase[index].name,
+            power: 0,
+            accuracy: 80,
+            type: null
+          }
+    );
+
     const ataquesCompetitivos = movimientos
       .filter((m) => Number(m.power) > 0)
       .sort((a, b) => scoreMove(b, tiposPokemon) - scoreMove(a, tiposPokemon))
       .slice(0, 4);
 
-    if (ataquesCompetitivos.length < 4) {
-      throw new Error("No se encontraron 4 ataques competitivos para este Pokemon.");
-    }
+    const nombresUsados = new Set(ataquesCompetitivos.map((m) => m.name));
+    const ataquesDeRelleno = movimientos
+      .filter((m) => !nombresUsados.has(m.name))
+      .slice(0, 4 - ataquesCompetitivos.length);
+    const ataques = [...ataquesCompetitivos, ...ataquesDeRelleno].slice(0, 4);
 
-    return Promise.all(ataquesCompetitivos.map((m) => traducirAtaque(m.name)));
+    return Promise.all(ataques.map((m) => traducirAtaque(m.name)));
   };
 
   const agregar = async () => {
@@ -381,9 +421,9 @@ export default function CrudPokemon() {
     setError("");
 
     try {
-      const nombre = datosLimpios.nombre.toLowerCase();
+      const nombre = normalizarNombreApi(datosLimpios.nombre);
       const data = await fetchJson(
-        `https://pokeapi.co/api/v2/pokemon/${nombre}`,
+        `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(nombre)}`,
         "No se pudo encontrar el Pokemon."
       );
 
