@@ -1185,5 +1185,5 @@ export default function CrudPokemon() {
   );
 }
 
-necesito que me arregles este codigo porque al momento de agregar cualquier pokemon me da error porque no toma bien la ruta y 
+#Necesito que me arregles este codigo porque al momento de agregar cualquier pokemon me da error porque no toma bien la ruta y 
 ademas que sea cualquier pokemon aunque no tenga sus 4 ataques competitivo
