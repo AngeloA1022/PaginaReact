@@ -2,6 +2,8 @@
 #Necesito que este codigo sea funcional y que utilice una api de pokemon ademas necesito que sea utilice esta api que tiene este link https://pokeapi.co/api/v2/pokemon/${nombre},
 tambien necesito que seleccione 4 ataues, que esten en español y que sean ataques competitvos
 
+
+
 codigo que le entregue
 
 import React, { useState, useEffect } from "react";
