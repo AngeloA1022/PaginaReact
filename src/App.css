@@ -1063,7 +1063,7 @@ nav a[href="/registro"] {
   padding: 10px;
   border: none;
   border-bottom: 2px solid #00ffb3;
-  background: transparent;
+  background: black;
   color: white;
   outline: none;
 }
