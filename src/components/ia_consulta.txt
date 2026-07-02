@@ -1,4 +1,17 @@
 #Necesito que tomes como base el código de personaje y crear un crud el cual deje agregar, actualizar y eliminar pokemones
+Ademas necesito que al actualizar la pagina queden en personaje guardado con un localStorage,
+#Tambien quiero que me deje elegir este 3 clase de pokemon Equilibrado,Atacante y Defensivo
+necesito utilizar estas imagenes por defecto que esten presente siempre
+Pokémon Equilibrado
+import charizard from "../images/charizard.png";
+import urshifu from "../images/urshifu.png";
+Pokémon Atacante 
+import pikachu from "../images/pikachu.png";
+import venusaur from "../images/venusaur.png";
+Pokémon Defensivo
+import blastoise from "../images/blastoise.png";
+import goodra from "../images/goodra.png";
+
 
 #Necesito que este codigo sea funcional y que utilice una api de Pokémon además necesito que sea utilice esta api que tiene este link https://pokeapi.co/api/v2/pokemon/${nombre},
 tambien necesito que seleccione 4 ataques, que estén en español y que sean ataques competitivos
