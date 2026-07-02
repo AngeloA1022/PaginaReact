@@ -454,7 +454,7 @@ export default function CrudPokemon() {
       setLoading(false);
     }
   };
-
+  
   const eliminar = (id) => {
     if (!window.confirm("Eliminar Pokemon?")) return;
     setPokemones((actuales) => actuales.filter((p) => p.id !== id));
